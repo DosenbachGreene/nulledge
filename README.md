@@ -151,23 +151,23 @@ Back-projection is solving for $X$ given $\beta$ and $Y$, possibly in the presen
 $$
 \begin{array}{c}
 \beta_u = \beta V\Sigma^{-1} \\
-\hat{X_\zeta} = \zeta^\intercal U\beta_u^\intercal\left(\beta_u^+\right)^\intercal\beta_u^+
+\hat{X_\zeta} = \zeta^\intercal X = \zeta^\intercal U\beta_u^\intercal \left(\zeta^\intercal U\beta_u^\intercal\right)^+\left[\left(\zeta^\intercal U\beta_u^\intercal\right)^+\right]^\intercal
 \end{array}
 $$
 
 - Note that a unique solution for $X$ only exists when there are more columns than rows in $Y$, i.e. there are more edges than participants in the study (nearly always true in neuroimaging studies).
 - Note that since $\Sigma$ is diagonal its inverse is simply `diag(1./diag(S))`.
-- When there are no covariates then $\zeta$ can simply be omitted from the equation.
+- When there are no covariates then $\zeta$ can simply be omitted from the equation, which then reduces to: $X = U\beta_u^\intercal\left(\beta_u^+\right)^\intercal\beta_u^+$
 - Note that $\hat{X_\zeta}$ has $n-p$ rows where $p$ is the number of columns in $Z$. If one wishes to obtain all the rows of $X$ (orthogonalized to the columns of $Z$) then simply left-multiply by $\zeta$.
 
 $$
 \hat{X} = \zeta\hat{X_\zeta}
 $$
 
-In the special case where $\beta_u = b_u$ is a row vector and thus $\hat{X_\zeta} = \hat{x_\zeta}$ is a column vector, the back-projection simplifies to:
+In the special case where $\beta_u = b_u$ is a row vector then $\hat{X_\zeta} = \hat{x_\zeta}$ is a column vector and the product $\zeta^\intercal Ub_u^\intercal$ is also a column vector. The back-projection can then computed by dividing by the sum of the element-wise square of $\zeta^\intercal Ub_u^\intercal$.
 
 $$
-\hat{x_\zeta} = \frac{1}{\sum b_u^2}\zeta^\intercal U b_u^\intercal
+\hat{x_\zeta} = \frac{1}{\sum_i\left(\zeta^\intercal Ub_u^\intercal\right)_i^2}\zeta^\intercal U b_u^\intercal
 $$
 
 ## Randomization Algorithm
@@ -186,7 +186,7 @@ Next, prepare for randomization.
 Now we can randomize and permute.
 
 6. Randomly sign-flip the columns of $\hat{b_{1u}}$ and $\hat{b_{2u}}$.<br />`b1u_rand = b1u .* ((randi(2, 1, size(b1u,2))-1).*2-1);`<br />`b2u_rand = b2u .* ((randi(2, 1, size(b2u,2))-1).*2-1);`
-7. Back-project the randomized $\hat{b_{1u}}$ and $\hat{b_{2u}}$ *separately* to obtain randomized $\hat{x_{1\zeta}}$ and $\hat{x_{2\zeta}}$.<br />`x1_rand = Znull' * U * b1u_rand' ./ sum(b1u_rand.*b1u_rand);`<br />`x2_rand = Znull' * U * b2u_rand' ./ sum(b2u_rand.*b2u_rand);`
+7. Back-project the randomized $\hat{b_{1u}}$ and $\hat{b_{2u}}$ *separately* to obtain randomized $\hat{x_{1\zeta}}$ and $\hat{x_{2\zeta}}$.<br />`x1_rand = Znull' * U * b1u_rand' ./ sum((Znull'*U*b1_rand).^2);`<br />`x2_rand = Znull' * U * b2u_rand' ./ sum((Znull'*U*b2_rand).^2);`
 8. Forward-project the randomized $X = \left[x_{1\zeta}\ x_{2\zeta}\right]$ *together* to obtain a randomized $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. This step controls for coincidental correlations between the randomized $x_{1\zeta}$ and $x_{2\zeta}$.<br />`X_rand = [x1_rand, x2_rand];`<br />`BU_rand = pinv(Znull' * X_rand) * Znull' * U;`<br />`B_rand = BU_rand * S * V';`
 9. Compute the similarity betweent the randomized $\hat{b_1}$ and $\hat{b_2}$.<br />`rnull = corr(B_rand(1,:)', B_rand(2,:)');`
 10. Repeat steps 6-9 many times to obtain a null distribution for the similarity computed in step 4.

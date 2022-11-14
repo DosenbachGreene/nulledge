@@ -219,10 +219,11 @@ classdef NullEdgeModel
             if size(b,2) == size(this.V,1)
                 b = b * this.V .* sinv(this.s)';
             end
+            assert(size(b,2) == size(this.U,2));
             
             % Backproject.
-            assert(size(b,2) == size(this.U,2));
-            xnull = this.Znull' * this.U * b' ./ sum(b.*b);
+            zub = this.Znull' * this.U *b';
+            xnull = zub ./ sum(zub .* zub);
         end
         function xnull = backproject_nonull(this, b)
             % Backproject b into the space of X without regard to nuisance
