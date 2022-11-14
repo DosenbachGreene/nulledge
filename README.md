@@ -56,60 +56,45 @@ The experienced neuroimaging scientist recognizes that many edge matrices resemb
 For a given study participant, the voxel, parcel, or node-wise connectivity, or *edge* matrix can be flattened into a row vector of its edges.
 
 $$
+\begin{array}{ccc}
 \underbrace{\left[\begin{matrix}
 & y_1 & y_2 & y_3 \\
 & & y_4 & y_5 \\
 & & & y_m \\
 & & &
-\end{matrix}\right]}_{\displaystyle \textrm{voxels}}\ \rightarrow \underbrace{\left[\begin{matrix}y_1 & y_2 & y_3 & y_4 & y_5 & \cdots & y_m\end{matrix}\right]}_{\displaystyle\textrm{edges}}
+\end{matrix}\right]} & \rightarrow & \underbrace{\left[\begin{matrix}y_1 & y_2 & y_3 & y_4 & y_5 & \cdots & y_m\end{matrix}\right]} \\
+\textrm{voxels} & & \textrm{edges}
+\end{array}
 $$
 
-Given some predictor variables $X$ on each participant (e.g. height, NIH Toolbox score, etc), a linear regression model is used to solve for some edge vectors $\beta$. Each row in $\beta$ is the edge vector for the corresponding column in $X$.
+Given some predictor variables $X$ on each participant (e.g. height, NIH Toolbox score, etc), a linear regression model is used to solve for some edge vectors $\beta$. Each row in $X$ and $Y$ is a participant in the study. Each row in $\beta$ is the edge vector for the corresponding column in $X$.
 
 $$
 Y = X\beta + \epsilon,\ \epsilon\overset{iid}{\sim}\mathcal{N}\left(0, \sigma^2\right)
 $$
 
 $$
-\require{html}
-\underset{n\times m}{Y} = \underbrace{\left[\begin{matrix}
+\begin{array}{cccccc}
+\underset{n\times m}{Y} = & \underbrace{\left[\begin{matrix}
 y_{11} & y_{22} & \cdots & y_{1m} \\
 y_{21} & y_{22} & \cdots & y_{2m} \\
 \vdots & \vdots & \ddots & \vdots \\
 y_{n1} & y_{n2} & \cdots & y_{nm}
-\end{matrix}\right]}_{\displaystyle \textrm{edges}}
-\left.\vphantom{\left[\begin{matrix}
-y_{11} & y_{22} & \cdots & y_{1m} \\
-y_{21} & y_{22} & \cdots & y_{2m} \\
-\vdots & \vdots & \ddots & \vdots \\
-y_{n1} & y_{n2} & \cdots & y_{nm}
-\end{matrix}\right]}\right\rbrace\style{display: inline-block; transform-origin: left; transform: rotate(90deg) translate(-50%, -50%); margin-right: -4em;}{\textrm{participants}}
-,\
-\underset{n\times p}{X} = \underbrace{\left[\begin{matrix}
+\end{matrix}\right]}, &
+\underset{n\times p}{X} = & \underbrace{\left[\begin{matrix}
 x_{11} & x_{22} & \cdots & x_{1p} \\
 x_{21} & x_{22} & \cdots & x_{2p} \\
 \vdots & \vdots & \ddots & \vdots \\
 x_{n1} & x_{n2} & \cdots & x_{np}
-\end{matrix}\right]}_{\displaystyle \textrm{predictors}}
-\left.\vphantom{\left[\begin{matrix}
-x_{11} & x_{22} & \cdots & x_{1p} \\
-x_{21} & x_{22} & \cdots & x_{2p} \\
-\vdots & \vdots & \ddots & \vdots \\
-x_{n1} & x_{n2} & \cdots & x_{np}
-\end{matrix}\right]}\right\rbrace\style{display: inline-block; transform-origin: left; transform: rotate(90deg) translate(-50%, -50%); margin-right: -4em;}{\textrm{participants}}
-,\
-\underset{p\times m}{\beta} = \underbrace{\left[\begin{matrix}
+\end{matrix}\right]}, &
+\underset{p\times m}{\beta} = & \underbrace{\left[\begin{matrix}
 \beta_{11} & \beta_{12} & \cdots & \beta_{1m} \\
 \beta_{21} & \beta_{22} & \cdots & \beta_{2m} \\
 \vdots & \vdots & \ddots & \vdots \\
 \beta_{p1} & \beta_{p2} & \cdots & \beta_{pm}
-\end{matrix}\right]}_{\displaystyle \textrm{edges}}
-\left.\vphantom{\left[\begin{matrix}
-\beta_{11} & \beta_{12} & \cdots & \beta_{1m} \\
-\beta_{21} & \beta_{22} & \cdots & \beta_{2m} \\
-\vdots & \vdots & \ddots & \vdots \\
-\beta_{p1} & \beta_{p2} & \cdots & \beta_{pm}
-\end{matrix}\right]}\right\rbrace\style{display: inline-block; transform-origin: left; transform: rotate(90deg) translate(-50%, -50%); margin-right: -3em;}{\textrm{predictors}}
+\end{matrix}\right]} \\
+& \textrm{edges} & & \textrm{predictors} & & \textrm{edges}
+\end{array}
 $$
 
 ### Forward-Projection
@@ -123,9 +108,11 @@ $$
 Instead of forward-projecting in one step using the pseudoinverse $X^+$ as above, we can instead forward-project in two steps. We obtain the singular value decomposition of $Y=U\Sigma V^\intercal$. First we forward-project into the compressed space of U. Then we forward-project into the full edge space of $Y$.
 
 $$
+\begin{array}{c}
 Y = U\Sigma V^\intercal \\
 \hat{\beta_u} = X^+ U \\
 \hat{\beta} = \hat{\beta_u}\Sigma V^\intercal
+\end{array}
 $$
 
 ### Covariates
@@ -147,21 +134,25 @@ $$
 Then by multiplying both sides of the equation by $\zeta^\intercal$ we obtain an equivalent solution to the forward model while accounting for covariates.
 
 $$
-Y = U\Sigma V^\intercal = X\beta + Z\gamma + \epsilon\\
+\begin{array}{c}
+Y = U\Sigma V^\intercal = X\beta + Z\gamma + \epsilon \\
 \zeta^\intercal Y = \zeta^\intercal U\Sigma V^\intercal = \zeta^\intercal X\beta + \zeta^\intercal Z\gamma + \epsilon \\
 \zeta^\intercal Y = \zeta^\intercal U\Sigma V^\intercal = \zeta^\intercal X\beta + \mathbf{0} + \epsilon \\
 \downarrow \\
 \hat{\beta_u} = \left(\zeta^\intercal X\right)^+ \zeta^\intercal U \\
 \hat{\beta} = \hat{\beta_u}\Sigma V^\intercal
+\end{array}
 $$
 
 ### Back-Projection
 
-Back-projection is solving for $X$ given $\beta$ and $Y$, possibly in the presence of covariates. Taking advantage of the properties that $U$ and $\zeta^\intercal$ are orthogonal matrices, the back-projection is obtained as follows.
+Back-projection is solving for $X$ given $\beta$ and $Y$, possibly in the presence of covariates. Taking advantage of the properties that $U$, $V$, and $\zeta^\intercal$ are orthogonal matrices, the back-projection is obtained as follows.
 
 $$
+\begin{array}{c}
 \beta_u = \beta V\Sigma^{-1} \\
 \hat{X_\zeta} = \zeta^\intercal U\beta_u^\intercal\left(\beta_u^+\right)^\intercal\beta_u^+
+\end{array}
 $$
 
 - Note that a unique solution for $X$ only exists when there are more columns than rows in $Y$, i.e. there are more edges than participants in the study (nearly always true in neuroimaging studies).
@@ -185,7 +176,7 @@ First we compute the un-randomized similarity between the edge vectors $\hat{b_1
 
 1. Compute the singular value decomposition of $Y = U\Sigma V^\intercal$.<br />`[U,S,V] = svd(Y, 'econ');`
 2. Compute $\zeta$, the null space of $Z$, such that $\zeta^\intercal\zeta=I, \zeta^\intercal Z = \mathbf{0}$.<br />`Znull = null(Z');`
-3. Controlling for $Z$ using its null space, forward-project $X=\left[\begin{matrix}x_1 & x_2\end{matrix}\right]$ *together* to obtain $\hat{\beta} = \left[\begin{matrix}\hat{b_1} & \hat{b_2}\end{matrix}\right]$. Forward-projecting $X$ together controls for the correlation between $x_1$ and $x_2$.<br />`BU = pinv(Znull' * X) * Znull' * U;`<br />`B = BU * S * V';`
+3. Controlling for $Z$ using its null space, forward-project $X=\left[x_1\ x_2\right]$ *together* to obtain $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. Forward-projecting $X$ together controls for the correlation between $x_1$ and $x_2$.<br />`BU = pinv(Znull' * X) * Znull' * U;`<br />`B = BU * S * V';`
 4. Compute the similarity between $\hat{b_1}$ and $\hat{b_2}$.<br />`r = corr(B(1,:)', B(2,:)');`
 
 Next, prepare for randomization.
@@ -196,7 +187,7 @@ Now we can randomize and permute.
 
 6. Randomly sign-flip the columns of $\hat{b_{1u}}$ and $\hat{b_{2u}}$.<br />`b1u_rand = b1u .* ((randi(2, 1, size(b1u,2))-1).*2-1);`<br />`b2u_rand = b2u .* ((randi(2, 1, size(b2u,2))-1).*2-1);`
 7. Back-project the randomized $\hat{b_{1u}}$ and $\hat{b_{2u}}$ *separately* to obtain randomized $\hat{x_{1\zeta}}$ and $\hat{x_{2\zeta}}$.<br />`x1_rand = Znull' * U * b1u_rand' ./ sum(b1u_rand.*b1u_rand);`<br />`x2_rand = Znull' * U * b2u_rand' ./ sum(b2u_rand.*b2u_rand);`
-8. Forward-project the randomized $X = \left[\begin{matrix}x_{1\zeta} & x_{2\zeta}\end{matrix}\right]$ *together* to obtain a randomized $\hat{\beta} = \left[\begin{matrix}\hat{b_1} & \hat{b_2}\end{matrix}\right]$. This step controls for coincidental correlations between the randomized $x_{1\zeta}$ and $x_{2\zeta}$.<br />`X_rand = [x1_rand, x2_rand];`<br />`BU_rand = pinv(Znull' * X_rand) * Znull' * U;`<br />`B_rand = BU_rand * S * V';`
+8. Forward-project the randomized $X = \left[x_{1\zeta}\ x_{2\zeta}\right]$ *together* to obtain a randomized $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. This step controls for coincidental correlations between the randomized $x_{1\zeta}$ and $x_{2\zeta}$.<br />`X_rand = [x1_rand, x2_rand];`<br />`BU_rand = pinv(Znull' * X_rand) * Znull' * U;`<br />`B_rand = BU_rand * S * V';`
 9. Compute the similarity betweent the randomized $\hat{b_1}$ and $\hat{b_2}$.<br />`rnull = corr(B_rand(1,:)', B_rand(2,:)');`
 10. Repeat steps 6-9 many times to obtain a null distribution for the similarity computed in step 4.
 
