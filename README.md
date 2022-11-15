@@ -170,6 +170,15 @@ $$
 \hat{x_\zeta} = \frac{1}{\sum_i\left(\zeta^\intercal Ub_u^\intercal\right)_i^2}\zeta^\intercal U b_u^\intercal
 $$
 
+> As proof, we begin with the forward model. Since $U$ is orthogonal, $UU^\intercal=I$, and since $\zeta^\intercal$ is orthogonal, $\zeta^\intercal\zeta=I$. Thus:
+> <p align="center">$\beta_u = \left(\zeta^\intercal X\right)^+ \zeta^\intercal U$<br />$\beta_u U^\intercal\zeta = \left(\zeta^\intercal X\right)^+\zeta^\intercal UU^\intercal\zeta = \left(\zeta^\intercal X\right)^+\zeta^\intercal I\zeta$<br />$\beta_u U^\intercal\zeta = \left(\zeta^\intercal X\right)^+\zeta^\intercal\zeta = \left(\zeta^\intercal X\right)^+I = \left(\zeta^\intercal X\right)^+$<br />$\left(\beta_u U^\intercal\zeta\right)^\intercal = \zeta^\intercal U\beta_u^\intercal = \left[\left(\zeta^\intercal X\right)^+\right]^\intercal$</p>
+> Next we apply the identity $\left(X^+\right)^\intercal X^\intercal X = X$.
+> <p align="center"><br />$\zeta^\intercal U\beta_u^\intercal \left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X = \left[\left(\zeta^\intercal X\right)^+\right]^\intercal \left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X = \zeta^\intercal X$</p>
+> We can use the identity $\left(X^\intercal X\right)^{-1}=X^+\left(X^+\right)^\intercal$ and substitute:
+> <p align="center"><br />$\left[\left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X\right]^{-1} = \left(\zeta^\intercal X\right)^+\left[\left(\zeta^\intercal X\right)^+\right]^\intercal = \left(\beta_u U^\intercal\zeta\right)\left(\beta_u U^\intercal\zeta\right)^\intercal$<br />$\left[\left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X\right]^{-1} = \left(\zeta^\intercal U\beta_u^\intercal\right)^\intercal\left(\zeta^\intercal U\beta_u^\intercal\right)$<br />$\left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X = \left[\left(\zeta^\intercal U\beta_u^\intercal\right)^\intercal\left(\zeta^\intercal U\beta_u^\intercal\right)\right]^{-1}$<br />$\left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X = \left(\zeta^\intercal U\beta_u^\intercal\right)^+\left[\left(\zeta^\intercal U\beta_u^\intercal\right)^+\right]^\intercal$</p>
+> Proving:
+> <p align="center">$\hat{X_\zeta} = \zeta^\intercal X = \zeta^\intercal U\beta_u^\intercal \left(\zeta^\intercal X\right)^\intercal \zeta^\intercal X$<br />$\hat{X_\zeta} = \zeta^\intercal X = \zeta^\intercal U\beta_u^\intercal \left(\zeta^\intercal U\beta_u^\intercal\right)^+\left[\left(\zeta^\intercal U\beta_u^\intercal\right)^+\right]^\intercal$</p>
+
 ## Randomization Algorithm
 
 First we compute the un-randomized similarity between the edge vectors $\hat{b_1}$ and $\hat{b_2}$ corresponding to the variables $x_1$ and $x_2$.
