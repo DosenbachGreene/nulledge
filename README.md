@@ -41,7 +41,7 @@ histogram(abs(rnull)); xline(abs(r));
 p_value = sum(abs(rnull) > abs(r)) / length(rnull);
 ```
 
-See the comments/help information in [`NullEdgeModel.m`](nulledgemodel.m) for more information.
+See the comments/help information in [`NullEdgeModel.m`](NullEdgeModel.m) for more information.
 
 ## The Problem
 
