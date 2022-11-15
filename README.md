@@ -185,18 +185,18 @@ First we compute the un-randomized similarity between the edge vectors $\hat{b_1
 
 1. Compute the singular value decomposition of $Y = U\Sigma V^\intercal$.<br />`[U,S,V] = svd(Y, 'econ');`
 2. Compute $\zeta$, the null space of $Z$, such that $\zeta^\intercal\zeta=I, \zeta^\intercal Z = \mathbf{0}$.<br />`Znull = null(Z');`
-3. Controlling for $Z$ using its null space, forward-project $X=\left[x_1\ x_2\right]$ *together* to obtain $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. Forward-projecting $X$ together controls for the correlation between $x_1$ and $x_2$.<br />`BU = pinv(Znull' * X) * Znull' * U;`<br />`B = BU * S * V';`
+3. Controlling for $Z$ using its null space, forward-project $X=\left[x_1\ x_2\right]$ to obtain $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. Forward-projecting $X$ together controls for the correlation between $x_1$ and $x_2$.<br />`BU = pinv(Znull' * X) * Znull' * U;`<br />`B = BU * S * V';`
 4. Compute the similarity between $\hat{b_1}$ and $\hat{b_2}$.<br />`r = corr(B(1,:)', B(2,:)');`
 
 Next, prepare for randomization.
 
-5. Forward-project $x_1$ and $x_2$ *separately* into the space of $U$ to obtain $\hat{b_{1u}}$ and $\hat{b_{2u}}$. We deliberately do *not* want to account for the correlation between $x_1$ and $x_2$ in this step.<br />`b1u = pinv(Znull' * x1) * Znull' * U;`<br />`b2u = pinv(Znull' * x2) * Znull' * U;`
+5. Forward-project $X$ into the space of $U$ to obtain $\hat{B_u} = \left[\hat{b_{1u}}\ \hat{b_{2u}}\right]$.<br />`BU = pinv(Znull' * X) * Znull' * U;`
 
 Now we can randomize and permute.
 
-6. Randomly sign-flip the columns of $\hat{b_{1u}}$ and $\hat{b_{2u}}$.<br />`b1u_rand = b1u .* ((randi(2, 1, size(b1u,2))-1).*2-1);`<br />`b2u_rand = b2u .* ((randi(2, 1, size(b2u,2))-1).*2-1);`
-7. Back-project the randomized $\hat{b_{1u}}$ and $\hat{b_{2u}}$ *separately* to obtain randomized $\hat{x_{1\zeta}}$ and $\hat{x_{2\zeta}}$.<br />`x1_rand = Znull' * U * b1u_rand' ./ sum((Znull'*U*b1_rand).^2);`<br />`x2_rand = Znull' * U * b2u_rand' ./ sum((Znull'*U*b2_rand).^2);`
-8. Forward-project the randomized $X = \left[x_{1\zeta}\ x_{2\zeta}\right]$ *together* to obtain a randomized $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. This step controls for coincidental correlations between the randomized $x_{1\zeta}$ and $x_{2\zeta}$.<br />`X_rand = [x1_rand, x2_rand];`<br />`BU_rand = pinv(Znull' * X_rand) * Znull' * U;`<br />`B_rand = BU_rand * S * V';`
+6. Randomly sign-flip the entries of $\hat{B_u}$.<br />`BU_rand = BU .* ((randi(2, size(BU,1), size(BU,2))-1).*2-1);`
+7. Back-project the randomized $\hat{B_u}$ to obtain randomized $\hat{X_\zeta} = \left[\hat{x_{1\zeta}}\ \hat{x_{2\zeta}}\right]$.<br />`zub = this.Znull' * this.U * BU_rand';`<br />`zub_pinv = pinv(zub);`<br />`Xnull_rand = zub * (zub_pinv * zub_pinv');`
+8. Forward-project the randomized $X_\zeta$ to obtain a randomized $\hat{\beta} = \left[\hat{b_1}\ \hat{b_2}\right]$. This step controls for coincidental correlations between the randomized $x_{1\zeta}$ and $x_{2\zeta}$.<br />`BU_rand = pinv(Xnull_rand) * Znull' * U;`<br />`B_rand = BU_rand * S * V';`
 9. Compute the similarity betweent the randomized $\hat{b_1}$ and $\hat{b_2}$.<br />`rnull = corr(B_rand(1,:)', B_rand(2,:)');`
 10. Repeat steps 6-9 many times to obtain a null distribution for the similarity computed in step 4.
 

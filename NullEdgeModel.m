@@ -57,8 +57,7 @@ classdef NullEdgeModel
         V       % Singular value decomposition of Y (axes).
     end
     properties(Access=protected)
-        b1u     % Beta vector for x1.
-        b2u     % Beta vector for x2.
+        BU      % Beta vectors for x1 and x2.
     end
     properties(Dependent)
         Y       % Participant x edge matrix of observed connectivity.
@@ -76,8 +75,7 @@ classdef NullEdgeModel
             this.x2 = [];
             this.Z = [];
             this.simfun = @(b1, b2)(corr(b1(:), b2(:)));
-            this.b1u = [];
-            this.b2u = [];
+            this.BU = [];
             
             % Store whichever arguments we are given.
             if nargin >= 1
@@ -129,9 +127,9 @@ classdef NullEdgeModel
                 this.s = diag(S);
             end
             
-            % Reset b1u and b2u.
-            this.b1u = [];
-            this.b2u = [];
+            % Reset BU.
+            this.BU = [];
+            this.BU = [];
         end
         function this = set.x1(this, x1)
             % x1 should be a participant x 1 vector.
@@ -148,9 +146,8 @@ classdef NullEdgeModel
             end
             this.x1 = x1;
             
-            % Reset b1u and b2u.
-            this.b1u = [];
-            this.b2u = [];
+            % Reset BU.
+            this.BU = [];
         end
         function this = set.x2(this, x2)
             % x2 should be a participant x 1 vector.
@@ -167,9 +164,8 @@ classdef NullEdgeModel
             end
             this.x2 = x2;
             
-            % Reset b1u and b2u.
-            this.b1u = [];
-            this.b2u = [];
+            % Reset BU.
+            this.BU = [];
         end
         function this = set.Z(this, Z)
             % Z should be a participant x covariate vector.
@@ -192,55 +188,75 @@ classdef NullEdgeModel
                 this.Znull = null(Z');
             end
             
-            % Reset b1u and b2u.
-            this.b1u = [];
-            this.b2u = [];
+            % Reset BU.
+            this.BU = [];
         end
         function this = set.simfun(this, simfun)
             assert(isa(simfun, 'function_handle'));
             this.simfun = simfun;
         end
-        function x = backproject(this, b)
+        function x = backproject(this, B)
             % Backproject b to recover x orthogonalized to Z (i.e. with Z
             % regresssed out).
             % See also backproject_null and backproject_nonull.
-            assert(~isempty(this.Znull));
-            x = this.Znull * this.backproject_null(b);
+            x = this.backproject_null(B);
+            if ~isempty(this.Znull)
+                x = this.Znull * x;
+            end
         end
-        function xnull = backproject_null(this, b)
+        function xnull = backproject_null(this, B)
             % Backproject b into the null space of Z.
             % See also backproject and backproject_nonull.
-            assert(~isempty(this.Znull));
-            assert(isvector(b));
-            assert(isfloat(b));
+            assert(ismatrix(B));
+            assert(isfloat(B));
             
             % If b is in the space of Y then project b into the
             % (orthonomal) space of U.
-            if size(b,2) == size(this.V,1)
-                b = b * this.V .* sinv(this.s)';
+            if size(B,2) == size(this.V,1)
+                B = B * this.V .* sinv(this.s)';
             end
-            assert(size(b,2) == size(this.U,2));
+            assert(size(B,2) == size(this.U,2));
             
             % Backproject.
-            zub = this.Znull' * this.U *b';
-            xnull = zub ./ sum(zub .* zub);
+            if isempty(this.Znull)
+                % Backproject without covariates in Z.
+                xnull = this.backproject_nonull(B);
+            else
+                % Backproject with covariates in Z.
+                zub = this.Znull' * this.U * B';
+                if size(B,1) == 1
+                    % Optimized version for vector B.
+                    xnull = zub ./ sum(zub .* zub);
+                else
+                    % General case.
+                    zub_pinv = pinv(zub);
+                    xnull = zub * (zub_pinv * zub_pinv');
+                end
+            end
         end
-        function xnull = backproject_nonull(this, b)
+        function xnull = backproject_nonull(this, B)
             % Backproject b into the space of X without regard to nuisance
             % covariates in Z.
             % See also backproject and backproject_null.
-            assert(isvector(b));
-            assert(isfloat(b));
+            assert(ismatrix(B));
+            assert(isfloat(B));
             
             % If b is in the space of Y then project b into the
             % (orthonomal) space of U.
-            if size(b,2) == size(this.V,1)
-                b = b * this.V .* sinv(this.s)';
+            if size(B,2) == size(this.V,1)
+                B = B * this.V .* sinv(this.s)';
             end
-            
-            % Backproject.
             assert(size(b,2) == size(this.U,2));
-            xnull = this.U * b' ./ sum(b.*b);
+            
+            % Backproject.            
+            if size(B,1) == 1
+                % Optimized version for vector B
+                xnull = this.U * B' ./ sum(B.*B);
+            else
+                % General case.
+                B_pinv = pinv(B);
+                xnull = this.U * B' * (B_pinv' * B_pinv);
+            end
         end
         function BU = forwardproject_U(this, X)
             % Obtain an edge vector B for X in the space of U, controlling
@@ -297,24 +313,21 @@ classdef NullEdgeModel
             % Randomize edge vectors to obtain a null value for similarity.
             % Optionally returns the two randomized edge vectors b1 and b2.
             
-            % Regenerate b1u and b2u if needed.
-            if isempty(this.b1u) || isempty(this.b2u)
-                this.b1u = this.forwardproject_U(this.x1);
-                this.b2u = this.forwardproject_U(this.x2);
+            % Regenerate BU if needed.
+            if isempty(this.BU)
+                this.BU = this.forwardproject_U();
             end
             
-            % Randomize b1u and b2u by sign flipping columns.
+            % Randomize BU by sign flipping columns.
             % Sign flipping preserves the underlying edge structure.
-            b1u_rand = signflip(this.b1u);
-            b2u_rand = signflip(this.b2u);
+            BU_rand = signflip(this.BU);
             
             % Backproject into the null space.
-            x1null_rand = this.backproject_null(b1u_rand);
-            x2null_rand = this.backproject_null(b2u_rand);
+            Xnull_rand = this.backproject_null(BU_rand);
             
             % Forward project back into space of Y.
             % This step accounts for correlation between the x variables.
-            B_rand = this.forwardproject([x1null_rand, x2null_rand]);
+            B_rand = this.forwardproject(Xnull_rand);
             
             % Compute similarity.
             similarity = this.simfun(B_rand(1,:), B_rand(2,:));
