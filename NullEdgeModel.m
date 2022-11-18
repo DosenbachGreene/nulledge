@@ -246,7 +246,7 @@ classdef NullEdgeModel
             if size(B,2) == size(this.V,1)
                 B = B * this.V .* sinv(this.s)';
             end
-            assert(size(b,2) == size(this.U,2));
+            assert(size(B,2) == size(this.U,2));
             
             % Backproject.            
             if size(B,1) == 1
