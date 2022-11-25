@@ -24,7 +24,10 @@ classdef NullEdgeModel
     % you have a custom similarity function you can set it thusly. Note
     % that b1 and b2 are row vectors.
     %
-    % model.simfun = @(b1, b2)(corr(b1(:), b2(:)));
+    % simfun = SimFun;
+    % simfun.type = SimFunType.TwoArgs;
+    % simfun.simfun = @(b1, b2)(corr(b1(:), b2(:)));
+    % model.fun = simfun;
     % 
     % If you have some template b from a different data set but don't know
     % the corresponding x, you can approximate it via backprojection
@@ -74,7 +77,7 @@ classdef NullEdgeModel
             this.x1 = [];
             this.x2 = [];
             this.Z = [];
-            this.simfun = @(b1, b2)(corr(b1(:), b2(:)));
+            this.simfun = SimFun;
             this.BU = [];
             
             % Store whichever arguments we are given.
@@ -192,7 +195,7 @@ classdef NullEdgeModel
             this.BU = [];
         end
         function this = set.simfun(this, simfun)
-            assert(isa(simfun, 'function_handle'));
+            assert(isa(simfun, 'SimFun'));
             this.simfun = simfun;
         end
         function x = backproject(this, B)
